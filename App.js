@@ -1,21 +1,9 @@
-import {
-  StyleSheet,
-  Text,
-  View,
-  StatusBar,
-  SafeAreaView,
-  FlatList,
-  Image,
-  useWindowDimensions,
-  TouchableOpacity,
-  Modal,
-  Pressable,
-  BackHandler,
-} from "react-native";
+import { StyleSheet, Text, View, StatusBar, SafeAreaView, FlatList, Image, useWindowDimensions, TouchableOpacity, Modal, Pressable, BackHandler } from "react-native";
 import moviesdata from "./data/moviedata";
 import React, { useEffect, useState } from "react";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import { ImageViewer } from "react-native-image-zoom-viewer";
+import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
 
 export default function App() {
   const { width, height } = useWindowDimensions();
@@ -29,9 +17,7 @@ export default function App() {
   });
 
   const movieFilteredYears = [...new Set(movieYears)];
-  const filteredMovies = moviesdata.filter(
-    (item) => Number(item.Year) === 2020
-  );
+  const filteredMovies = moviesdata.filter((item) => Number(item.Year) === 2020);
 
   const [visible, setVisible] = useState(false);
   const [singleMovie, setSingleMovie] = useState();
@@ -147,6 +133,12 @@ export default function App() {
       width: "100%",
       backgroundColor: "black",
     },
+    movieInfo: {
+      paddingRight: 5,
+      flex: 1,
+      flexDirection: "row",
+      justifyContent: "space-between",
+    },
     movieTitle: {
       padding: 5,
       fontSize: 12,
@@ -155,7 +147,7 @@ export default function App() {
       color: "white",
       minHeight: 40,
     },
-    moveInfo: {
+    movieRatingYear: {
       paddingLeft: 5,
       paddingRight: 5,
       paddingBottom: 5,
@@ -176,14 +168,16 @@ export default function App() {
       height: movieImageHeight,
       resizeMode: "cover",
     },
+    headerStyle: {
+      backgroundColor: "darkcyan",
+      padding: 10,
+      marginBottom: 10,
+    },
     listHeader: {
       fontSize: 15,
       textAlign: "center",
       fontWeight: "900",
-      backgroundColor: "darkcyan",
-      padding: 10,
       color: "white",
-      marginBottom: 10,
     },
     movieCard: {
       width: movieCardwidth,
@@ -204,7 +198,6 @@ export default function App() {
     /* Modal styles */
     closeBtn: {
       alignSelf: "flex-end",
-      backgroundColor: "darkgray",
     },
     textStyle: {
       fontSize: 28,
@@ -263,13 +256,18 @@ export default function App() {
     },
   });
 
+  header = () => {
+    return (
+      <View style={styles.headerStyle}>
+        <Text style={styles.listHeader}>IMDb Top 250 Movies</Text>
+        {/* <Text>Sort by:</Text> */}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar
-        animated={true}
-        backgroundColor={"darkseagreen"}
-        style={{ padding: 10 }}
-      />
+      <StatusBar animated={true} backgroundColor={"darkseagreen"} style={{ padding: 10 }} />
       <FlatList
         data={moviesdata}
         horizontal={false}
@@ -277,12 +275,11 @@ export default function App() {
         key={noCols}
         columnWrapperStyle={styles.row}
         style={styles.flatList}
-        stickySectionHeadersEnabled
+        keyExtractor={(item) => item.imdbID}
+        ListHeaderComponent={header}
+        stickyHeaderIndices={[0]}
         renderItem={({ item, index }) => (
-          <TouchableOpacity
-            key={index.toString()}
-            onPress={() => onPressView(item)}
-          >
+          <TouchableOpacity key={index.toString()} onPress={() => onPressView(item)}>
             <View style={styles.movieCard}>
               <Image
                 style={styles.posterImage}
@@ -290,27 +287,26 @@ export default function App() {
                   uri: item.Poster,
                 }}
               />
-              <Text numberOfLines={2} style={styles.movieTitle}>
-                {item.Title}
-              </Text>
-              <View style={styles.moveInfo}>
-                <Text style={styles.movieRating}>
-                  Rating: {item.imdbRating}
+
+              <View style={styles.movieInfo}>
+                <Text numberOfLines={2} style={styles.movieTitle}>
+                  {item.Title}
                 </Text>
+                <Text style={{ marginTop: 5, opacity: 0.5 }}>
+                  <FontAwesomeIcon name="info-circle" size={18} color="#fff" />
+                </Text>
+              </View>
+              <View style={styles.movieRatingYear}>
+                <Text style={styles.movieRating}>Rating: {item.imdbRating}</Text>
                 <Text style={styles.movieYear}>{item.Year}</Text>
               </View>
             </View>
           </TouchableOpacity>
         )}
-        keyExtractor={(item) => item.imdbID}
-        ListHeaderComponent={
-          <Text style={styles.listHeader}>IMDb Top 250 Movies</Text>
-        }
-        //stickyHeaderHiddenOnScroll={false}
       />
       <ModalPopup visible={visible}>
         <Pressable onPress={() => setVisible(false)} style={styles.closeBtn}>
-          <Text style={styles.textStyle}>&times;</Text>
+          <FontAwesomeIcon name="times-circle" size={24} color="#fff" />
         </Pressable>
         <View style={styles.popupCard}>
           <Text style={styles.popupMovieTitle}>{singleMovie?.Title}</Text>
@@ -331,39 +327,27 @@ export default function App() {
             </Pressable>
             <View style={{ flex: 1, flexWrap: "nowrap" }}>
               <Text style={styles.popupMovieInfoLabel}>
-                <Text style={[styles.popupMovieInfoText, { fontSize: 20 }]}>
-                  {singleMovie?.Released}
-                </Text>
+                <Text style={[styles.popupMovieInfoText, { fontSize: 20 }]}>{singleMovie?.Released}</Text>
               </Text>
               <Text style={styles.popupMovieInfoLabel}>
                 Duration:&nbsp;
-                <Text style={styles.popupMovieInfoText}>
-                  {singleMovie?.Runtime}
-                </Text>
+                <Text style={styles.popupMovieInfoText}>{singleMovie?.Runtime}</Text>
               </Text>
               <Text style={styles.popupMovieInfoLabel}>
                 IMDbRating:&nbsp;
-                <Text style={styles.popupMovieInfoText}>
-                  {singleMovie?.imdbRating}
-                </Text>
+                <Text style={styles.popupMovieInfoText}>{singleMovie?.imdbRating}</Text>
               </Text>
               <Text style={styles.popupMovieInfoLabel}>
                 Language:&nbsp;
-                <Text style={styles.popupMovieInfoText}>
-                  {singleMovie?.Language}
-                </Text>
+                <Text style={styles.popupMovieInfoText}>{singleMovie?.Language}</Text>
               </Text>
               <Text style={styles.popupMovieInfoLabel}>
                 Box Office Revenue:{"\n"}
-                <Text style={styles.popupMovieInfoText}>
-                  {singleMovie?.BoxOffice}
-                </Text>
+                <Text style={styles.popupMovieInfoText}>{singleMovie?.BoxOffice}</Text>
               </Text>
               <Text style={styles.popupMovieInfoLabel}>
                 Genre:&nbsp;
-                <Text style={styles.popupMovieInfoText}>
-                  {singleMovie?.Genre}
-                </Text>
+                <Text style={styles.popupMovieInfoText}>{singleMovie?.Genre}</Text>
               </Text>
             </View>
           </View>
@@ -390,15 +374,7 @@ export default function App() {
               height: "100%",
             }}
           >
-            <ImageViewer
-              imageUrls={zoomImage}
-              enablePreload={true}
-              useNativeDriver={true}
-              enableSwipeDown={true}
-              saveToLocalByLongPress={false}
-              renderIndicator={() => null}
-              onSwipeDown={closeModal}
-            />
+            <ImageViewer imageUrls={zoomImage} enablePreload={true} useNativeDriver={true} enableSwipeDown={true} saveToLocalByLongPress={false} renderIndicator={() => null} onSwipeDown={closeModal} />
           </View>
         </SafeAreaView>
       </ModalImagePopup>
@@ -430,12 +406,7 @@ const ModalPopup = ({ visible, children }) => {
   });
 
   return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={showModal}
-      presentationStyle={"overFullScreen"}
-    >
+    <Modal animationType="slide" transparent={true} visible={showModal} presentationStyle={"overFullScreen"}>
       <View style={styles.modalView}>{children}</View>
     </Modal>
   );
