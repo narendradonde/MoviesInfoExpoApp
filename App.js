@@ -4,8 +4,12 @@ import React, { useEffect, useState } from "react";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import { ImageViewer } from "react-native-image-zoom-viewer";
 import FontAwesomeIcon from "react-native-vector-icons/FontAwesome";
+import SelectDropdown from "react-native-select-dropdown";
 
 export default function App() {
+  const [moviesdataset, setMovieData] = useState(moviesdata);
+  const [sortType, setSortType] = useState();
+
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const movieCardwidth = width < 500 ? width / 2 - 10 : width / 3 - 10;
@@ -17,7 +21,6 @@ export default function App() {
   });
 
   const movieFilteredYears = [...new Set(movieYears)];
-  const filteredMovies = moviesdata.filter((item) => Number(item.Year) === 2020);
 
   const [visible, setVisible] = useState(false);
   const [singleMovie, setSingleMovie] = useState();
@@ -121,6 +124,31 @@ export default function App() {
     setSingleMovie(movieItem);
     setVisible(true);
   };
+
+  useEffect(() => {
+    const sortArray = (type) => {
+      let sortedMoviesData = [];
+      const sortProperty = type;
+      if (sortProperty === "Title") {
+        sortedMoviesData = [...moviesdata].sort((a, b) => {
+          if (a[sortProperty] < b[sortProperty]) {
+            return -1;
+          }
+          if (a[sortProperty] > b[sortProperty]) {
+            return 1;
+          }
+          return 0;
+        });
+      } else {
+        sortedMoviesData = [...moviesdata].sort((a, b) => {
+          return a[sortProperty] - b[sortProperty];
+        });
+      }
+      setMovieData(sortedMoviesData);
+    };
+
+    sortArray(sortType);
+  }, [sortType]);
 
   const styles = StyleSheet.create({
     container: {
@@ -254,13 +282,98 @@ export default function App() {
       color: "gray",
       width: "100%",
     },
+    sortBox: {
+      display: "flex",
+      flexDirection: "row",
+      alignItems: "flex-start",
+      marginTop: 10,
+    },
   });
 
+  const sortByOptions = [
+    { title: "IMDb Rating", value: "imdbRating" },
+    { title: "Release Year", value: "Year" },
+    { title: "Alphabetical", value: "Title" },
+  ];
+
   header = () => {
+    const dropdownStyles = StyleSheet.create({
+      dropdownButtonStyle: {
+        width: 120,
+        height: 20,
+        backgroundColor: "#E9ECEF",
+        borderRadius: 2,
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        marginLeft: 5,
+      },
+      dropdownButtonTxtStyle: {
+        flex: 1,
+        fontSize: 12,
+        fontWeight: "500",
+        color: "#151E26",
+      },
+      dropdownButtonArrowStyle: {
+        fontSize: 12,
+      },
+      dropdownButtonIconStyle: {
+        fontSize: 12,
+        marginRight: 8,
+      },
+      dropdownMenuStyle: {
+        backgroundColor: "#E9ECEF",
+        borderRadius: 8,
+      },
+      dropdownItemStyle: {
+        width: "100%",
+        flexDirection: "row",
+        paddingHorizontal: 12,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingVertical: 2,
+      },
+      dropdownItemTxtStyle: {
+        flex: 1,
+        fontSize: 12,
+        fontWeight: "500",
+        color: "#151E26",
+      },
+      dropdownItemIconStyle: {
+        fontSize: 28,
+        marginRight: 8,
+      },
+    });
     return (
       <View style={styles.headerStyle}>
         <Text style={styles.listHeader}>IMDb Top 250 Movies</Text>
-        {/* <Text>Sort by:</Text> */}
+        <View style={styles.sortBox}>
+          <Text style={{ color: "#fff" }}>Sort by:</Text>
+          <SelectDropdown
+            data={sortByOptions}
+            onSelect={(selectedItem, index) => {
+              setSortType(selectedItem.value);
+            }}
+            renderButton={(selectedItem, isOpened) => {
+              return (
+                <View style={dropdownStyles.dropdownButtonStyle}>
+                  <Text style={dropdownStyles.dropdownButtonTxtStyle}>{(selectedItem && selectedItem.title) || "Select Option"}</Text>
+                  <FontAwesomeIcon name={isOpened ? "chevron-up" : "chevron-down"} style={dropdownStyles.dropdownButtonArrowStyle} />
+                </View>
+              );
+            }}
+            renderItem={(item, index, isSelected) => {
+              return (
+                <View style={{ ...dropdownStyles.dropdownItemStyle, ...(isSelected && { backgroundColor: "#D2D9DF" }) }}>
+                  <Text style={dropdownStyles.dropdownItemTxtStyle}>{item.title}</Text>
+                </View>
+              );
+            }}
+            showsVerticalScrollIndicator={false}
+            dropdownStyle={dropdownStyles.dropdownMenuStyle}
+          />
+        </View>
       </View>
     );
   };
@@ -269,7 +382,7 @@ export default function App() {
     <SafeAreaView style={styles.container}>
       <StatusBar animated={true} backgroundColor={"darkseagreen"} style={{ padding: 10 }} />
       <FlatList
-        data={moviesdata}
+        data={moviesdataset}
         horizontal={false}
         numColumns={noCols}
         key={noCols}
